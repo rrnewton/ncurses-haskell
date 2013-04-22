@@ -20,6 +20,7 @@ import           Control.Monad (liftM, ap)
 import           Control.Monad.Fix (MonadFix, mfix)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Trans.Reader (ReaderT)
+import           Control.Monad.Trans.Class (lift)
 import qualified Foreign as F
 import qualified Foreign.C as F
 
@@ -52,6 +53,9 @@ instance Monad Update where
 	return = Update . return
 	m >>= f = Update (unUpdate m >>= unUpdate . f)
 
+instance MonadIO Update where
+	liftIO io = Update$ lift (liftIO io)
+
 instance MonadFix Update where
 	mfix f = Update (mfix (unUpdate . f))
 
@@ -63,6 +67,7 @@ instance A.Applicative Update where
 	(<*>) = ap
 
 newtype Window = Window { windowPtr :: F.Ptr Window }
+  deriving Show
 
 checkRC :: String -> F.CInt -> IO ()
 checkRC name rc = if toInteger rc == E.fromEnum E.ERR
